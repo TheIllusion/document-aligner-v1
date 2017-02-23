@@ -5,8 +5,8 @@
 #include "GfttCornerDetector.h"
 #include "SelectSquare.h"
 
-//#define TEST_SET_ROOT_PATH "/home/illusion/ClionProjects/line-detection-experiments-git/Document_Aligner_TestSet/Document_Aligner_TestSet/normal_set/original/"
-#define TEST_SET_ROOT_PATH "/Users/Illusion/Documents/Data/Document_Aligner_TestSet/normal_set/original/"
+#define TEST_SET_ROOT_PATH "/home/illusion/ClionProjects/line-detection-experiments-git/Document_Aligner_TestSet/Document_Aligner_TestSet/normal_set/original/"
+//#define TEST_SET_ROOT_PATH "/Users/Illusion/Documents/Data/Document_Aligner_TestSet/normal_set/original/"
 
 static char filename_buff[100];
 
@@ -111,7 +111,8 @@ std::vector<cv::Point2f> find_candidate_corners(std::vector<cv::Point2f> corners
     std::vector<cv::Point2f> candidate_corners;
     cv::Point2f temp_point1, temp_point2;
     double dist, minimum_dist;
-    cv::Point2f closest_corner;
+    //cv::Point2f closest_corner;
+    std::vector<cv::Point2f>::iterator closest_corner;
 
     //iterate through lines
     for(std::vector<cv::Vec4f>::iterator it = lines.begin(); it != lines.end(); it++)
@@ -132,16 +133,15 @@ std::vector<cv::Point2f> find_candidate_corners(std::vector<cv::Point2f> corners
             {
                 //this means that the two points are located in similar locations
                 minimum_dist = dist;
-                closest_corner = *corner;
+                closest_corner = corner;
             }
         }
 
         //save the closest corner
         if( (minimum_dist > 0) && (minimum_dist < MAXIMUM_DISTANCE_THRESHOLD) )
         {
-            candidate_corners.push_back(closest_corner);
-            //TODO
-            //this corner should be removed from the vector for performance enhancement
+            candidate_corners.push_back(*closest_corner);
+            corners.erase(closest_corner);
         }
 
         //iterate through corners
@@ -154,16 +154,15 @@ std::vector<cv::Point2f> find_candidate_corners(std::vector<cv::Point2f> corners
             {
                 //this means that the two points are located in similar locations
                 minimum_dist = dist;
-                closest_corner = *corner;
+                closest_corner = corner;
             }
         }
 
         //save the closest corner
         if( (minimum_dist > 0) && (minimum_dist < MAXIMUM_DISTANCE_THRESHOLD) )
         {
-            candidate_corners.push_back(closest_corner);
-            //TODO
-            //this corner should be removed from the vector for performance enhancement
+            candidate_corners.push_back(*closest_corner);
+            corners.erase(closest_corner);
         }
     }
 
