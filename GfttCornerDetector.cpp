@@ -19,5 +19,7 @@ std::vector<cv::Point2f> Gftt::DetectCorners(cv::Mat &image)
     cv::namedWindow("GFTT");
     cv::imshow("GFTT", gftt_corners);
 
+    std::cout << "number of corners: " << corners.size() << std::endl;
+
     return corners;
 }
