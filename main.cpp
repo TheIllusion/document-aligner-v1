@@ -5,8 +5,8 @@
 #include "GfttCornerDetector.h"
 #include "SelectSquare.h"
 
-#define TEST_SET_ROOT_PATH "/home/illusion/ClionProjects/line-detection-experiments-git/Document_Aligner_TestSet/Document_Aligner_TestSet/normal_set/original/"
-//#define TEST_SET_ROOT_PATH "/Users/Illusion/Documents/Data/Document_Aligner_TestSet/normal_set/original/"
+//#define TEST_SET_ROOT_PATH "/home/illusion/ClionProjects/line-detection-experiments-git/Document_Aligner_TestSet/Document_Aligner_TestSet/normal_set/original/"
+#define TEST_SET_ROOT_PATH "/Users/Illusion/Documents/Data/Document_Aligner_TestSet/normal_set/original/"
 
 static char filename_buff[100];
 
@@ -18,8 +18,8 @@ static const char* file_name =
         //"IMG_1418_iphone.jpg";
         //"IMG_1419_iphone.jpg";
         //"IMG_1420_iphone.jpg";
-        //"IMG_1421_iphone.jpg";
-        "20170125_152406_galaxy.jpg";
+        "IMG_1421_iphone.jpg";
+        //"20170125_152406_galaxy.jpg";
         //"20170125_152538_galaxy.jpg";
         //"20170125_153220_galaxy.jpg";
         //"20170125_153230_galaxy.jpg";
@@ -38,6 +38,10 @@ int main() {
     // open the image file
     cv::Mat color_image = cv::imread(filename_buff, cv::IMREAD_COLOR);
     cv::Mat gray_image = cv::imread(filename_buff, cv::IMREAD_GRAYSCALE);
+
+    // Convert BGR to HSV
+    cv::Mat hsv_image;
+    cv::cvtColor(color_image, hsv_image, CV_BGR2HSV);
 
     if (color_image.data == NULL || gray_image.data == NULL)
     {
@@ -89,15 +93,25 @@ int main() {
     if(candidate_corners.size() >= 4)
         squares = generate_combinations(candidate_corners);
 
-    std::vector<cv::Point2i> selected_square = selectSquareInSquares(squares);
+#if 1
+    std::vector<cv::Point2i> selected_square = selectSquareInSquares(squares, hsv_image);
 
     for(std::vector<cv::Point2i>::iterator it = selected_square.begin(); it != selected_square.end(); it++)
     {
         cv::circle(result_corners_img, *it, 3, cv::Scalar(0, 0, 255), 3);
     }
 
+    //debug. show the color sampling points
+    /*
+    cv::circle(result_corners_img, selected_square[0] + cv::Point2i(20,20) , 3, cv::Scalar(0, 255, 0), 2);
+    cv::circle(result_corners_img, selected_square[1] + cv::Point2i(-20,20) , 3, cv::Scalar(0, 255, 0), 2);
+    cv::circle(result_corners_img, selected_square[2] + cv::Point2i(-20,-20) , 3, cv::Scalar(0, 255, 0), 2);
+    cv::circle(result_corners_img, selected_square[3] + cv::Point2i(20,-20) , 3, cv::Scalar(0, 255, 0), 2);
+    */
+
     cv::namedWindow("Result_Corners");
     cv::imshow("Result_Corners", result_corners_img);
+#endif
 
     cv::waitKey();
 
@@ -168,12 +182,4 @@ std::vector<cv::Point2f> find_candidate_corners(std::vector<cv::Point2f> corners
 
     std::cout << "number of candidate corners: " << candidate_corners.size() << std::endl;
     return candidate_corners;
-}
-
-double distance_between_points(cv::Point2f pointA, cv::Point2f pointB)
-{
-    double dist = cv::sqrt( (pointA.x - pointB.x) * (pointA.x - pointB.x) +
-                            (pointA.y - pointB.y) * (pointA.y - pointB.y));
-
-    return dist;
 }
