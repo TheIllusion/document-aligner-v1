@@ -24,18 +24,37 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
         // sample colors from 10 neighbouring points
         cv::Vec3b lab_pixel[4];
         cv::Vec3b average_lab_value;
-        double sum_of_lab_variations = 0;
 
-        for(int i = 5; i < 50; i++)
+#define MIN_SAMPLING_DEPTH_IN_DIST 1
+#define MAX_SAMPLING_DEPTH_IN_DIST 100
+
+        // calculate the average LAB value
+        average_lab_value[0] = 0;
+        average_lab_value[0] = 1;
+        average_lab_value[0] = 2;
+        for(int i = MIN_SAMPLING_DEPTH_IN_DIST; i < MAX_SAMPLING_DEPTH_IN_DIST; i++)
         {
             lab_pixel[0] = lab_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(i, i));
             lab_pixel[1] = lab_image.at<cv::Vec3b>((*square)[1] + cv::Point2i(-i, i));
             lab_pixel[2] = lab_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-i, -i));
             lab_pixel[3] = lab_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(i, -i));
 
-            average_lab_value[0] = (lab_pixel[0][0] + lab_pixel[1][0] + lab_pixel[2][0] + lab_pixel[3][0]) / 4;
-            average_lab_value[1] = (lab_pixel[0][1] + lab_pixel[1][1] + lab_pixel[2][1] + lab_pixel[3][1]) / 4;
-            average_lab_value[3] = (lab_pixel[0][2] + lab_pixel[1][2] + lab_pixel[2][2] + lab_pixel[3][2]) / 4;
+            average_lab_value[0] += (lab_pixel[0][0] + lab_pixel[1][0] + lab_pixel[2][0] + lab_pixel[3][0]);
+            average_lab_value[1] += (lab_pixel[0][1] + lab_pixel[1][1] + lab_pixel[2][1] + lab_pixel[3][1]);
+            average_lab_value[3] += (lab_pixel[0][2] + lab_pixel[1][2] + lab_pixel[2][2] + lab_pixel[3][2]);
+        }
+        average_lab_value[0] = average_lab_value[0] / 4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST);
+        average_lab_value[1] = average_lab_value[1] / 4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST);
+        average_lab_value[2] = average_lab_value[2] / 4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST);
+
+        double sum_of_lab_variations = 0;
+
+        for(int i = MIN_SAMPLING_DEPTH_IN_DIST; i < MAX_SAMPLING_DEPTH_IN_DIST; i++)
+        {
+            lab_pixel[0] = lab_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(i, i));
+            lab_pixel[1] = lab_image.at<cv::Vec3b>((*square)[1] + cv::Point2i(-i, i));
+            lab_pixel[2] = lab_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-i, -i));
+            lab_pixel[3] = lab_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(i, -i));
 
             sum_of_lab_variations += cv::norm(lab_pixel[0], average_lab_value) +
                                      cv::norm(lab_pixel[1], average_lab_value) +
