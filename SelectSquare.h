@@ -7,7 +7,7 @@
 
 #include "opencv2/opencv.hpp"
 
-std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point2i>>& squares, cv::Mat &hsv_image);
+std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point2i>>& squares, cv::Mat &lab_image);
 
 //void generate_combinations(int N, int K);
 std::vector<std::vector<cv::Point2i>> generate_combinations(std::vector<cv::Point2f> &corners);

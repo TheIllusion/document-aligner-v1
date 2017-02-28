@@ -7,7 +7,7 @@
 #include <iterator>
 
 std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point2i>>& squares,
-                                               cv::Mat &hsv_image)
+                                               cv::Mat &lab_image)
 {
     if (squares.size() == 1)
     {
@@ -16,39 +16,42 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
 
     //compare color difference between four points
     //iterate through squares
-    double minimum_hue_difference = -1;
+    double minimum_lab_difference = -1;
     std::vector<cv::Point2i> selected_square;
 
     for(std::vector<std::vector<cv::Point2i>>::iterator square = squares.begin(); square != squares.end(); square++)
     {
-        cv::Vec3b hsv_pixel_0 = hsv_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(15,15));
-        cv::Vec3b hsv_pixel_1 = hsv_image.at<cv::Vec3b>((*square)[1] + cv::Point2i(-15,15));
-        cv::Vec3b hsv_pixel_2 = hsv_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-15,-15));
-        cv::Vec3b hsv_pixel_3 = hsv_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(15,-15));
+        // sample colors from 10 neighbouring points
+        cv::Vec3b lab_pixel[4];
+        cv::Vec3b average_lab_value;
+        double sum_of_lab_variations = 0;
 
-        cv::Vec3b hsv_pixel_4 = hsv_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(25,25));
-        cv::Vec3b hsv_pixel_5 = hsv_image.at<cv::Vec3b>((*square)[1] + cv::Point2i(-25,25));
-        cv::Vec3b hsv_pixel_6 = hsv_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-25,-25));
-        cv::Vec3b hsv_pixel_7 = hsv_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(25,-25));
-
-        double average_hue_value = (hsv_pixel_0[0] + hsv_pixel_1[0] + hsv_pixel_2[0] + hsv_pixel_3[0] +
-                                    hsv_pixel_4[0] + hsv_pixel_5[0] + hsv_pixel_6[0] + hsv_pixel_7[0]) / 8;
-        double sum_of_hue_variations = fabs(hsv_pixel_0[0] - average_hue_value) +
-                                       fabs(hsv_pixel_1[0] - average_hue_value) +
-                                       fabs(hsv_pixel_2[0] - average_hue_value) +
-                                       fabs(hsv_pixel_3[0] - average_hue_value) +
-                                       fabs(hsv_pixel_4[0] - average_hue_value) +
-                                       fabs(hsv_pixel_5[0] - average_hue_value) +
-                                       fabs(hsv_pixel_6[0] - average_hue_value) +
-                                       fabs(hsv_pixel_7[0] - average_hue_value);
-
-        if (minimum_hue_difference == -1 ||
-            sum_of_hue_variations < minimum_hue_difference)
+        for(int i = 5; i < 50; i++)
         {
-            minimum_hue_difference = sum_of_hue_variations;
+            lab_pixel[0] = lab_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(i, i));
+            lab_pixel[1] = lab_image.at<cv::Vec3b>((*square)[1] + cv::Point2i(-i, i));
+            lab_pixel[2] = lab_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-i, -i));
+            lab_pixel[3] = lab_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(i, -i));
+
+            average_lab_value[0] = (lab_pixel[0][0] + lab_pixel[1][0] + lab_pixel[2][0] + lab_pixel[3][0]) / 4;
+            average_lab_value[1] = (lab_pixel[0][1] + lab_pixel[1][1] + lab_pixel[2][1] + lab_pixel[3][1]) / 4;
+            average_lab_value[3] = (lab_pixel[0][2] + lab_pixel[1][2] + lab_pixel[2][2] + lab_pixel[3][2]) / 4;
+
+            sum_of_lab_variations += cv::norm(lab_pixel[0], average_lab_value) +
+                                     cv::norm(lab_pixel[1], average_lab_value) +
+                                     cv::norm(lab_pixel[2], average_lab_value) +
+                                     cv::norm(lab_pixel[3], average_lab_value);
+        }
+
+        if (minimum_lab_difference == -1 ||
+            sum_of_lab_variations < minimum_lab_difference)
+        {
+            minimum_lab_difference = sum_of_lab_variations;
             selected_square = *square;
         }
     }
+
+    std::cout << "minimum_lab_difference: " << minimum_lab_difference << std::endl;
 
     return selected_square;
 
@@ -165,7 +168,7 @@ std::vector<std::vector<cv::Point2i>> generate_combinations(std::vector<cv::Poin
             }
 
 //#define MAXIMUM_ALLOWED_COSINE_VALUE 0.3
-#define MAXIMUM_ALLOWED_COSINE_VALUE 0.05
+#define MAXIMUM_ALLOWED_COSINE_VALUE 0.2
 
             if (maxCosine < MAXIMUM_ALLOWED_COSINE_VALUE)
                 squares.push_back(square);
@@ -235,7 +238,6 @@ void sortCorners(std::vector<cv::Point2i>& corners)
         top.push_back(corners[i]);
     }
 
-
     cv::Point2i tl = top[0].x > top[1].x ? top[1] : top[0];
     cv::Point2i tr = top[0].x > top[1].x ? top[0] : top[1];
     cv::Point2i bl = bot[0].x > bot[1].x ? bot[1] : bot[0];
@@ -248,7 +250,6 @@ void sortCorners(std::vector<cv::Point2i>& corners)
     corners.push_back(bl);
 }
 
-
 double distance_between_points(cv::Point2f pointA, cv::Point2f pointB)
 {
     double dist = cv::sqrt( (pointA.x - pointB.x) * (pointA.x - pointB.x) +
@@ -256,7 +257,6 @@ double distance_between_points(cv::Point2f pointA, cv::Point2f pointB)
 
     return dist;
 }
-
 
 double angle(cv::Point2i pt1, cv::Point2i pt2, cv::Point2i pt0)
 {

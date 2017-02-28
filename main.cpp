@@ -18,8 +18,8 @@ static const char* file_name =
         //"IMG_1418_iphone.jpg";
         //"IMG_1419_iphone.jpg";
         //"IMG_1420_iphone.jpg";
-        "IMG_1421_iphone.jpg";
-        //"20170125_152406_galaxy.jpg";
+        //"IMG_1421_iphone.jpg";
+        "20170125_152406_galaxy.jpg";
         //"20170125_152538_galaxy.jpg";
         //"20170125_153220_galaxy.jpg";
         //"20170125_153230_galaxy.jpg";
@@ -39,9 +39,9 @@ int main() {
     cv::Mat color_image = cv::imread(filename_buff, cv::IMREAD_COLOR);
     cv::Mat gray_image = cv::imread(filename_buff, cv::IMREAD_GRAYSCALE);
 
-    // Convert BGR to HSV
-    cv::Mat hsv_image;
-    cv::cvtColor(color_image, hsv_image, CV_BGR2HSV);
+    // Convert BGR to Lab
+    cv::Mat lab_image;
+    cv::cvtColor(color_image, lab_image, CV_BGR2Lab);
 
     if (color_image.data == NULL || gray_image.data == NULL)
     {
@@ -57,7 +57,6 @@ int main() {
         cv::resize(color_image, color_image, cv::Size(), (double) RESIZED_IMAGE_WIDTH / color_image.cols,
                    (double) RESIZED_IMAGE_WIDTH / color_image.cols, cv::INTER_CUBIC);
     }
-
 
     // resize the frame size if necessary
     if (gray_image.cols > RESIZED_IMAGE_WIDTH)
@@ -81,7 +80,7 @@ int main() {
 
     for(std::vector<cv::Point2f>::iterator it = candidate_corners.begin(); it != candidate_corners.end(); it++)
     {
-        cv::circle(candidate_corners_img, *it, 3, cv::Scalar(0, 0, 255), 3);
+        cv::circle(candidate_corners_img, *it, 3, cv::Scalar(0, 0, 255), 2);
     }
 
     cv::namedWindow("Candidate_Corners");
@@ -93,8 +92,18 @@ int main() {
     if(candidate_corners.size() >= 4)
         squares = generate_combinations(candidate_corners);
 
+    // debug. show the candidate rectangles.
+    for(std::vector<std::vector<cv::Point2i>>::iterator it = squares.begin(); it != squares.end(); it++)
+    {
+        std::vector<cv::Point2i> square = *it;
+        cv::line(result_corners_img, square[0], square[1], cv::Scalar(255,0,0), 1, 8);
+        cv::line(result_corners_img, square[1], square[2], cv::Scalar(255,0,0), 1, 8);
+        cv::line(result_corners_img, square[2], square[3], cv::Scalar(255,0,0), 1, 8);
+        cv::line(result_corners_img, square[3], square[0], cv::Scalar(255,0,0), 1, 8);
+    }
+
 #if 1
-    std::vector<cv::Point2i> selected_square = selectSquareInSquares(squares, hsv_image);
+    std::vector<cv::Point2i> selected_square = selectSquareInSquares(squares, lab_image);
 
     for(std::vector<cv::Point2i>::iterator it = selected_square.begin(); it != selected_square.end(); it++)
     {
@@ -102,12 +111,10 @@ int main() {
     }
 
     //debug. show the color sampling points
-    /*
     cv::circle(result_corners_img, selected_square[0] + cv::Point2i(20,20) , 3, cv::Scalar(0, 255, 0), 2);
     cv::circle(result_corners_img, selected_square[1] + cv::Point2i(-20,20) , 3, cv::Scalar(0, 255, 0), 2);
     cv::circle(result_corners_img, selected_square[2] + cv::Point2i(-20,-20) , 3, cv::Scalar(0, 255, 0), 2);
     cv::circle(result_corners_img, selected_square[3] + cv::Point2i(20,-20) , 3, cv::Scalar(0, 255, 0), 2);
-    */
 
     cv::namedWindow("Result_Corners");
     cv::imshow("Result_Corners", result_corners_img);
