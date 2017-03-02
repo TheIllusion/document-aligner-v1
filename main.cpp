@@ -24,6 +24,7 @@ static const char* file_name =
         //"20170125_153220_galaxy.jpg";
         //"20170125_153230_galaxy.jpg";
         //"20170125_153242_galaxy.jpg";
+        //"additional/3.jpg";
 
 double distance_between_points(cv::Point2f pointA, cv::Point2f pointB);
 
@@ -111,10 +112,13 @@ int main() {
     }
 
     //debug. show the color sampling points
-    cv::circle(result_corners_img, selected_square[0] + cv::Point2i(20,20) , 3, cv::Scalar(0, 255, 0), 2);
-    cv::circle(result_corners_img, selected_square[1] + cv::Point2i(-20,20) , 3, cv::Scalar(0, 255, 0), 2);
-    cv::circle(result_corners_img, selected_square[2] + cv::Point2i(-20,-20) , 3, cv::Scalar(0, 255, 0), 2);
-    cv::circle(result_corners_img, selected_square[3] + cv::Point2i(20,-20) , 3, cv::Scalar(0, 255, 0), 2);
+    if(selected_square.size() > 0)
+    {
+        cv::circle(result_corners_img, selected_square[0] + cv::Point2i(20,20) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[1] + cv::Point2i(-20,20) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[2] + cv::Point2i(-20,-20) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[3] + cv::Point2i(20,-20) , 3, cv::Scalar(0, 255, 0), 2);
+    }
 
     cv::namedWindow("Result_Corners");
     cv::imshow("Result_Corners", result_corners_img);

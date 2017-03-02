@@ -21,17 +21,21 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
 
     for(std::vector<std::vector<cv::Point2i>>::iterator square = squares.begin(); square != squares.end(); square++)
     {
-        // sample colors from 10 neighbouring points
+        // sample colors from the neighbouring points of each corner
         cv::Vec3b lab_pixel[4];
         cv::Vec3b average_lab_value;
+        double    average_lab_l, average_lab_a, average_lab_b;
 
-#define MIN_SAMPLING_DEPTH_IN_DIST 1
-#define MAX_SAMPLING_DEPTH_IN_DIST 100
+#define MIN_SAMPLING_DEPTH_IN_DIST 50
+#define MAX_SAMPLING_DEPTH_IN_DIST 200
+#define SAMPLING_STARTING_POINT_IN_DIST 2
+#define SAMPLING_DEPTH_IN_DIST 5
 
         // calculate the average LAB value
-        average_lab_value[0] = 0;
-        average_lab_value[0] = 1;
-        average_lab_value[0] = 2;
+        average_lab_l = 0;
+        average_lab_a = 0;
+        average_lab_b = 0;
+
         for(int i = MIN_SAMPLING_DEPTH_IN_DIST; i < MAX_SAMPLING_DEPTH_IN_DIST; i++)
         {
             lab_pixel[0] = lab_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(i, i));
@@ -39,17 +43,32 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
             lab_pixel[2] = lab_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-i, -i));
             lab_pixel[3] = lab_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(i, -i));
 
-            average_lab_value[0] += (lab_pixel[0][0] + lab_pixel[1][0] + lab_pixel[2][0] + lab_pixel[3][0]);
-            average_lab_value[1] += (lab_pixel[0][1] + lab_pixel[1][1] + lab_pixel[2][1] + lab_pixel[3][1]);
-            average_lab_value[3] += (lab_pixel[0][2] + lab_pixel[1][2] + lab_pixel[2][2] + lab_pixel[3][2]);
+            average_lab_l += (lab_pixel[0][0] + lab_pixel[1][0] + lab_pixel[2][0] + lab_pixel[3][0]);
+            average_lab_a += (lab_pixel[0][1] + lab_pixel[1][1] + lab_pixel[2][1] + lab_pixel[3][1]);
+            average_lab_b += (lab_pixel[0][2] + lab_pixel[1][2] + lab_pixel[2][2] + lab_pixel[3][2]);
         }
-        average_lab_value[0] = average_lab_value[0] / 4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST);
-        average_lab_value[1] = average_lab_value[1] / 4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST);
-        average_lab_value[2] = average_lab_value[2] / 4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST);
+
+        average_lab_l = average_lab_l / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
+        average_lab_a = average_lab_a / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
+        average_lab_b = average_lab_b / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
+
+        //debug
+        std::cout << "average_lab_l: " << average_lab_l << std::endl;
+        std::cout << "average_lab_a: " << average_lab_a << std::endl;
+        std::cout << "average_lab_b: " << average_lab_b << std::endl;
+
+        average_lab_value[0] = average_lab_l;
+        average_lab_value[1] = average_lab_a;
+        average_lab_value[2] = average_lab_b;
+
+        //debug
+        std::cout << "average Lab value(L): " << (double)average_lab_value[0] << std::endl;
+        std::cout << "average Lab value(a): " << (double)average_lab_value[1] << std::endl;
+        std::cout << "average Lab value(b): " << (double)average_lab_value[2] << std::endl;
 
         double sum_of_lab_variations = 0;
 
-        for(int i = MIN_SAMPLING_DEPTH_IN_DIST; i < MAX_SAMPLING_DEPTH_IN_DIST; i++)
+        for(int i = SAMPLING_STARTING_POINT_IN_DIST; i < SAMPLING_DEPTH_IN_DIST; i++)
         {
             lab_pixel[0] = lab_image.at<cv::Vec3b>((*square)[0] + cv::Point2i(i, i));
             lab_pixel[1] = lab_image.at<cv::Vec3b>((*square)[1] + cv::Point2i(-i, i));
@@ -143,7 +162,7 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
 #endif
 }
 
-#define MINIMUM_LINE_LENGTH_FOR_SQUARE 100.0
+#define MINIMUM_LINE_LENGTH_FOR_SQUARE 150.0
 
 //void generate_combinations(int N, int K)
 std::vector<std::vector<cv::Point2i>> generate_combinations(std::vector<cv::Point2f> &corners)
@@ -277,6 +296,7 @@ double distance_between_points(cv::Point2f pointA, cv::Point2f pointB)
     return dist;
 }
 
+// using inner product between two vectors
 double angle(cv::Point2i pt1, cv::Point2i pt2, cv::Point2i pt0)
 {
     double dx1 = pt1.x - pt0.x;
