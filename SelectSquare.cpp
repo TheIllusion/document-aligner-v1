@@ -26,10 +26,10 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
         cv::Vec3b average_lab_value;
         double    average_lab_l, average_lab_a, average_lab_b;
 
-#define MIN_SAMPLING_DEPTH_IN_DIST 50
-#define MAX_SAMPLING_DEPTH_IN_DIST 200
+#define MIN_SAMPLING_DEPTH_IN_DIST 100
+#define MAX_SAMPLING_DEPTH_IN_DIST 150
 #define SAMPLING_STARTING_POINT_IN_DIST 2
-#define SAMPLING_DEPTH_IN_DIST 5
+#define SAMPLING_DEPTH_IN_DIST 40
 
         // calculate the average LAB value
         average_lab_l = 0;
@@ -43,14 +43,27 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
             lab_pixel[2] = lab_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-i, -i));
             lab_pixel[3] = lab_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(i, -i));
 
+            //debug
+            /*
+            std::cout << "L lab_pixel[0][0]: " << (double)lab_pixel[0][0] << std::endl;
+            std::cout << "a lab_pixel[0][1]: " << (double)lab_pixel[0][1] << std::endl;
+            std::cout << "b lab_pixel[0][2]: " << (double)lab_pixel[0][2] << std::endl;
+            */
+
+            //debug
+            cv::circle(lab_image, (*square)[0] + cv::Point2i(i, i) , 1, cv::Scalar(255, 0, 0), 2);
+            cv::circle(lab_image, (*square)[1] + cv::Point2i(-i, i) , 1, cv::Scalar(255, 0, 0), 2);
+            cv::circle(lab_image, (*square)[2] + cv::Point2i(-i, -i) , 1, cv::Scalar(255, 0, 0), 2);
+            cv::circle(lab_image, (*square)[3] + cv::Point2i(i, -i) , 1, cv::Scalar(255, 0, 0), 2);
+
             average_lab_l += (lab_pixel[0][0] + lab_pixel[1][0] + lab_pixel[2][0] + lab_pixel[3][0]);
             average_lab_a += (lab_pixel[0][1] + lab_pixel[1][1] + lab_pixel[2][1] + lab_pixel[3][1]);
             average_lab_b += (lab_pixel[0][2] + lab_pixel[1][2] + lab_pixel[2][2] + lab_pixel[3][2]);
         }
 
-        average_lab_l = average_lab_l / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
-        average_lab_a = average_lab_a / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
-        average_lab_b = average_lab_b / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
+        average_lab_l = (double)average_lab_l / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
+        average_lab_a = (double)average_lab_a / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
+        average_lab_b = (double)average_lab_b / (4*(MAX_SAMPLING_DEPTH_IN_DIST-MIN_SAMPLING_DEPTH_IN_DIST));
 
         //debug
         std::cout << "average_lab_l: " << average_lab_l << std::endl;
@@ -62,9 +75,11 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
         average_lab_value[2] = average_lab_b;
 
         //debug
+        /*
         std::cout << "average Lab value(L): " << (double)average_lab_value[0] << std::endl;
         std::cout << "average Lab value(a): " << (double)average_lab_value[1] << std::endl;
         std::cout << "average Lab value(b): " << (double)average_lab_value[2] << std::endl;
+        */
 
         double sum_of_lab_variations = 0;
 
@@ -75,11 +90,25 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
             lab_pixel[2] = lab_image.at<cv::Vec3b>((*square)[2] + cv::Point2i(-i, -i));
             lab_pixel[3] = lab_image.at<cv::Vec3b>((*square)[3] + cv::Point2i(i, -i));
 
+#if 0
             sum_of_lab_variations += cv::norm(lab_pixel[0], average_lab_value) +
                                      cv::norm(lab_pixel[1], average_lab_value) +
                                      cv::norm(lab_pixel[2], average_lab_value) +
                                      cv::norm(lab_pixel[3], average_lab_value);
+#else
+            //for HSV
+            sum_of_lab_variations += (lab_pixel[0][0] - average_lab_value[0]) * (lab_pixel[0][0] - average_lab_value[0]) +
+                                     (lab_pixel[1][0] - average_lab_value[0]) * (lab_pixel[1][0] - average_lab_value[0]) +
+                                     (lab_pixel[2][0] - average_lab_value[0]) * (lab_pixel[2][0] - average_lab_value[0]) +
+                                     (lab_pixel[3][0] - average_lab_value[0]) * (lab_pixel[3][0] - average_lab_value[0]) +
+                                     (lab_pixel[0][1] - average_lab_value[1]) * (lab_pixel[0][1] - average_lab_value[1]) +
+                                     (lab_pixel[1][1] - average_lab_value[1]) * (lab_pixel[1][1] - average_lab_value[1]) +
+                                     (lab_pixel[2][1] - average_lab_value[1]) * (lab_pixel[2][1] - average_lab_value[1]) +
+                                     (lab_pixel[3][1] - average_lab_value[1]) * (lab_pixel[3][1] - average_lab_value[1]);
+#endif
         }
+
+        std::cout << "sum_of_lab_variations: " << sum_of_lab_variations << std::endl;
 
         if (minimum_lab_difference == -1 ||
             sum_of_lab_variations < minimum_lab_difference)
@@ -90,6 +119,9 @@ std::vector<cv::Point2i> selectSquareInSquares(std::vector<std::vector<cv::Point
     }
 
     std::cout << "minimum_lab_difference: " << minimum_lab_difference << std::endl;
+
+    cv::namedWindow("Lab_image");
+    cv::imshow("Lab_image", lab_image);
 
     return selected_square;
 
@@ -206,7 +238,7 @@ std::vector<std::vector<cv::Point2i>> generate_combinations(std::vector<cv::Poin
             }
 
 //#define MAXIMUM_ALLOWED_COSINE_VALUE 0.3
-#define MAXIMUM_ALLOWED_COSINE_VALUE 0.2
+#define MAXIMUM_ALLOWED_COSINE_VALUE 0.3
 
             if (maxCosine < MAXIMUM_ALLOWED_COSINE_VALUE)
                 squares.push_back(square);

@@ -14,12 +14,12 @@ static const char* file_name =
         //"IMG_1415_iphone.jpg";
         //"IMG_1415_iphone.jpg";
         //"IMG_1416_iphone.jpg";
-        //"IMG_1417_iphone.jpg";
+        "IMG_1417_iphone.jpg";
         //"IMG_1418_iphone.jpg";
         //"IMG_1419_iphone.jpg";
         //"IMG_1420_iphone.jpg";
         //"IMG_1421_iphone.jpg";
-        "20170125_152406_galaxy.jpg";
+        //"20170125_152406_galaxy.jpg";
         //"20170125_152538_galaxy.jpg";
         //"20170125_153220_galaxy.jpg";
         //"20170125_153230_galaxy.jpg";
@@ -39,10 +39,6 @@ int main() {
     // open the image file
     cv::Mat color_image = cv::imread(filename_buff, cv::IMREAD_COLOR);
     cv::Mat gray_image = cv::imread(filename_buff, cv::IMREAD_GRAYSCALE);
-
-    // Convert BGR to Lab
-    cv::Mat lab_image;
-    cv::cvtColor(color_image, lab_image, CV_BGR2Lab);
 
     if (color_image.data == NULL || gray_image.data == NULL)
     {
@@ -68,6 +64,11 @@ int main() {
 
     cv::Mat candidate_corners_img = color_image.clone();
     cv::Mat result_corners_img = color_image.clone();
+
+    // Convert BGR to Lab
+    cv::Mat lab_image;
+    //cv::cvtColor(color_image, lab_image, CV_BGR2Lab);
+    cv::cvtColor(color_image, lab_image, CV_BGR2HSV);
 
     Gftt gftt_detector;
 
@@ -114,14 +115,15 @@ int main() {
     //debug. show the color sampling points
     if(selected_square.size() > 0)
     {
-        cv::circle(result_corners_img, selected_square[0] + cv::Point2i(20,20) , 3, cv::Scalar(0, 255, 0), 2);
-        cv::circle(result_corners_img, selected_square[1] + cv::Point2i(-20,20) , 3, cv::Scalar(0, 255, 0), 2);
-        cv::circle(result_corners_img, selected_square[2] + cv::Point2i(-20,-20) , 3, cv::Scalar(0, 255, 0), 2);
-        cv::circle(result_corners_img, selected_square[3] + cv::Point2i(20,-20) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[0] + cv::Point2i(100,100) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[1] + cv::Point2i(-100,100) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[2] + cv::Point2i(-100,-100) , 3, cv::Scalar(0, 255, 0), 2);
+        cv::circle(result_corners_img, selected_square[3] + cv::Point2i(100,-100) , 3, cv::Scalar(0, 255, 0), 2);
     }
 
     cv::namedWindow("Result_Corners");
     cv::imshow("Result_Corners", result_corners_img);
+
 #endif
 
     cv::waitKey();
